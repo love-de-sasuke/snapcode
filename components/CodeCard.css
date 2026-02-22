@@ -1,0 +1,63 @@
+/*
+  CodeCard.css - Styles for the CodeCard component.
+  This file handles the visual appearance of the code card, including the macOS-style
+  window frame and the glowing line effect.
+*/
+
+.code-card-container {
+  min-height: 360px;
+  position: relative;
+}
+
+/* Dynamic mesh gradient behind the card */
+.code-card-mesh {
+  background: radial-gradient(ellipse 80% 60% at 20% 30%, rgba(139, 92, 246, 0.35), transparent 45%),
+    radial-gradient(ellipse 70% 50% at 80% 20%, rgba(34, 211, 238, 0.3), transparent 40%),
+    radial-gradient(ellipse 60% 50% at 60% 70%, rgba(244, 114, 182, 0.25), transparent 40%);
+  filter: blur(40px);
+  opacity: 0.85;
+  animation: mesh-shift 18s ease-in-out infinite alternate;
+}
+
+.window-frame {
+  /* Establishes a minimum width for the window frame. */
+  min-width: 400px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.45);
+  border-radius: 22px;
+}
+
+.code-pre {
+  /*
+    Enables smooth transitions for background color changes.
+    This is key for the 2026-style feel.
+  */
+  transition: background-color 0.3s ease;
+  color: rgba(240, 244, 255, 0.92);
+}
+
+.code-line {
+  /*
+    Applies a smooth transition to the box-shadow property.
+    This creates the "glowing" effect when a line is highlighted.
+    Using `will-change` is a performance optimization hint for the browser.
+  */
+  transition: box-shadow 0.2s ease-in-out;
+  will-change: box-shadow;
+  cursor: pointer; /* Indicates that lines are interactive. */
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin: 1px 0;
+}
+
+.code-line.glowing {
+  /*
+    The "glow" effect for highlighted lines.
+    We use a subtle, blurred box-shadow with a modern color.
+    The `!important` flag ensures this style overrides any other conflicting styles.
+  */
+  box-shadow: 0 0 15px 3px rgba(77, 145, 255, 0.4) !important;
+  background-color: rgba(77, 145, 255, 0.1);
+}
