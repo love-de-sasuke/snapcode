@@ -16,8 +16,7 @@
     "shiki": "^1.6.0",
     "html-to-image": "^1.11.11",
     "lucide-react": "^0.407.0",
-    "framer-motion": "^11.3.2",
-    "tinyld": "^1.1.0"
+    "framer-motion": "^11.3.2"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
@@ -35,6 +34,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "packageManager": "npm@10.2.4"
+  }
 }
