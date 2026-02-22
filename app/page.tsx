@@ -5,8 +5,25 @@ import CodeCard from "@/components/CodeCard";
 import { exportImage } from "@/lib/exportImage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Code, Zap, CheckCircle, SlidersHorizontal } from "lucide-react";
-import { tinyld } from "tinyld";
 import Script from "next/script";
+
+/** Simple keyword-based language detection (no external lib). */
+function detectLanguage(code: string): string {
+  const s = code.trim().slice(0, 2000);
+  if (/^import\s+.*\s+from\s+['"]|^export\s+(default\s+)?(function|const|class)|^\/\/\/?\s*</m.test(s)) return "typescript";
+  if (/^import\s+.*\s+from\s+['"]|^export\s+|^const\s+\w+\s*=\s*\(|^function\s+\w+\s*\(/m.test(s)) return "javascript";
+  if (/^def\s+\w+\s*\(|^class\s+\w+.*:|^from\s+\w+\s+import|^import\s+\w+|#.*\.py\b/m.test(s)) return "python";
+  if (/^func\s+|^package\s+\w+|^import\s+\(/m.test(s)) return "go";
+  if (/^fn\s+\w+|^let\s+mut\s+|^impl\s+\w+|^use\s+\w+::/m.test(s)) return "rust";
+  if (/^public\s+(static\s+)?(void|class|int)|^private\s+|^import\s+java\./m.test(s)) return "java";
+  if (/^<\?php|^\$[\w_]+\s*=/m.test(s)) return "php";
+  if (/^#include\s*<|^using\s+namespace\s+|^std::/m.test(s)) return "cpp";
+  if (/^<!DOCTYPE\s+html|^<html\b|^<head\b|^<body\b|^<div\b/m.test(s)) return "html";
+  if (/^@import\s+|^\.[\w-]+\s*\{|^#[\w-]+\s*\{|^body\s*\{/m.test(s)) return "css";
+  if (/^\s*\{[\s\n]*"[^"]+"\s*:/m.test(s)) return "json";
+  if (/^#!\/bin\/|^echo\s+|^export\s+[A-Z_]+=|^\w+\(\)\s*\{/m.test(s)) return "bash";
+  return "javascript";
+}
 
 const placeholderCode = `function greetings(name) {
   console.log("Hello, " + name + "!");
@@ -26,7 +43,7 @@ export default function Home() {
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newCode = e.target.value;
     setCode(newCode);
-    const detected = tinyld(newCode);
+    const detected = detectLanguage(newCode);
     if (detected && language !== detected) setLanguage(detected);
   };
 
