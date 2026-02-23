@@ -8,6 +8,7 @@ export interface CodeCardProps {
   code: string;
   language: string;
   theme?: string;
+  cardTheme?: string;
   cardRef: React.Ref<HTMLDivElement>;
   onLineClick: (lineNumber: number) => void;
   highlightedLines: Set<number>;
@@ -19,6 +20,7 @@ export default function CodeCard({
   code,
   language,
   theme = "dracula",
+  cardTheme = "aurora",
   cardRef,
   onLineClick,
   highlightedLines,
@@ -38,7 +40,7 @@ export default function CodeCard({
   return (
     <motion.div
       ref={cardRef}
-      className="code-card-container relative overflow-hidden rounded-3xl border border-white/10 shadow-silk silk-outline"
+      className={`code-card-container card-theme-${cardTheme} relative overflow-hidden rounded-3xl border border-white/10 shadow-silk silk-outline`}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{
         opacity: 1,
