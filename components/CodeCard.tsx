@@ -8,7 +8,7 @@ export interface CodeCardProps {
   code: string;
   language: string;
   theme?: string;
-  cardRef: React.RefObject<HTMLDivElement | null>;
+  cardRef: React.Ref<HTMLDivElement>;
   onLineClick: (lineNumber: number) => void;
   highlightedLines: Set<number>;
   /** Padding around code (e.g. 16, 24, 32) for adjustable card padding */
@@ -26,7 +26,7 @@ export default function CodeCard({
 }: CodeCardProps) {
   const { highlightedHtml, isReady } = useProcessor(code, language, highlightedLines, { theme });
 
-  const handleCodeClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleCodeClick = (e: React.MouseEvent<HTMLElement>) => {
     const target = e.target as HTMLElement;
     const lineEl = target.closest(".code-line");
     if (lineEl) {
