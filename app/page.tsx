@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import CodeCard from "@/components/CodeCard";
 import { exportImage } from "@/lib/exportImage";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,10 +47,6 @@ export default function Home() {
     if (detected && language !== detected) setLanguage(detected);
   };
 
-  const handlePaste = () => {
-    setPopKey((k) => k + 1);
-  };
-
   const handleLineClick = useCallback((lineNumber: number) => {
     setHighlightedLines((prev) => {
       const next = new Set(prev);
@@ -69,6 +65,12 @@ export default function Home() {
       })
       .catch((err) => console.error("Export failed:", err));
   }, []);
+
+  // Trigger preview pop animation after real code updates (typing/paste),
+  // not on the paste event itself, to avoid remounting textarea mid-paste.
+  useEffect(() => {
+    setPopKey((k) => k + 1);
+  }, [code]);
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-8 md:px-12 font-sans overflow-hidden">
@@ -182,7 +184,6 @@ export default function Home() {
               id="code-input"
               value={code}
               onChange={handleCodeChange}
-              onPaste={handlePaste}
               className="w-full bg-transparent border-0 outline-none px-4 pb-4 text-sm sm:text-base font-mono text-white placeholder:text-gray-400/80 min-h-[240px] resize-none focus:ring-0"
               rows={15}
               placeholder="Paste your code here..."
