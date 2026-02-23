@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import CodeCard from "@/components/CodeCard";
 import { exportImage } from "@/lib/exportImage";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Code, Zap, CheckCircle, SlidersHorizontal } from "lucide-react";
+import { Download, Code, Zap, CheckCircle, SlidersHorizontal, Palette } from "lucide-react";
 import Script from "next/script";
 
 /** Simple keyword-based language detection (no external lib). */
@@ -30,10 +30,34 @@ const placeholderCode = `function greetings(name) {
   // Click a line to highlight it
 }`;
 
+const themeOptions = [
+  { value: "dracula", label: "Dracula" },
+  { value: "github-dark", label: "GitHub Dark" },
+  { value: "nord", label: "Nord" },
+  { value: "one-dark-pro", label: "One Dark Pro" },
+];
+
+type GeneratedCard = {
+  code: string;
+  language: string;
+  theme: string;
+  padding: number;
+  highlightedLines: Set<number>;
+};
+
+function toggleLine(lines: Set<number>, lineNumber: number): Set<number> {
+  const next = new Set(lines);
+  if (next.has(lineNumber)) next.delete(lineNumber);
+  else next.add(lineNumber);
+  return next;
+}
+
 export default function Home() {
   const [code, setCode] = useState<string>(placeholderCode);
   const [language, setLanguage] = useState<string>("javascript");
   const [highlightedLines, setHighlightedLines] = useState<Set<number>>(() => new Set([3]));
+  const [selectedTheme, setSelectedTheme] = useState<string>("dracula");
+  const [generatedCard, setGeneratedCard] = useState<GeneratedCard | null>(null);
   const [exportSuccess, setExportSuccess] = useState<boolean>(false);
   const [cardPadding, setCardPadding] = useState<number>(24);
   const [popKey, setPopKey] = useState(0);
@@ -48,29 +72,33 @@ export default function Home() {
   };
 
   const handleLineClick = useCallback((lineNumber: number) => {
-    setHighlightedLines((prev) => {
-      const next = new Set(prev);
-      if (next.has(lineNumber)) next.delete(lineNumber);
-      else next.add(lineNumber);
-      return next;
+    setHighlightedLines((prev) => toggleLine(prev, lineNumber));
+    setGeneratedCard((prev) => {
+      if (!prev) return prev;
+      return { ...prev, highlightedLines: toggleLine(prev.highlightedLines, lineNumber) };
     });
   }, []);
 
+  const handleGenerateCard = useCallback(() => {
+    setGeneratedCard({
+      code,
+      language,
+      theme: selectedTheme,
+      padding: cardPadding,
+      highlightedLines: new Set(highlightedLines),
+    });
+    setPopKey((k) => k + 1);
+  }, [code, language, selectedTheme, cardPadding, highlightedLines]);
+
   const handleExport = useCallback(() => {
-    if (!cardRef.current) return;
+    if (!generatedCard || !cardRef.current) return;
     exportImage(cardRef.current, { pixelRatio: 4, cacheBust: true })
       .then(() => {
         setExportSuccess(true);
         setTimeout(() => setExportSuccess(false), 1200);
       })
       .catch((err) => console.error("Export failed:", err));
-  }, []);
-
-  // Trigger preview pop animation after real code updates (typing/paste),
-  // not on the paste event itself, to avoid remounting textarea mid-paste.
-  useEffect(() => {
-    setPopKey((k) => k + 1);
-  }, [code]);
+  }, [generatedCard]);
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-8 md:px-12 font-sans overflow-hidden">
@@ -105,7 +133,7 @@ export default function Home() {
         className="text-center mb-10 space-y-3"
       >
         <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs font-medium text-emerald-200/90 backdrop-blur-md shadow-md shadow-emerald-400/15">
-          High-res code cards · Dracula theme · 4× export
+          High-res code cards � Theme selector � 4x export
         </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-100 to-cyan-200 drop-shadow-[0_10px_50px_rgba(0,0,0,0.35)]">
           SnapCode <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-300 via-amber-200 to-cyan-200">2026</span>
@@ -115,9 +143,7 @@ export default function Home() {
         </p>
       </motion.div>
 
-      {/* Bento Grid: Left = Input & controls, Right = Live Preview */}
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 xl:grid-cols-[1.05fr_0.95fr] gap-8">
-        {/* Left — Input & controls (glassmorphism) */}
         <motion.section
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
@@ -145,6 +171,7 @@ export default function Home() {
                 className="w-full rounded-xl bg-gradient-to-r from-slate-900/70 to-slate-800/70 border border-white/10 px-3 py-2.5 text-white/90 capitalize cursor-default shadow-inner shadow-black/30"
               />
             </motion.div>
+
             <motion.div
               whileHover={{ scale: 1.01 }}
               className="bento-tile rounded-2xl border border-white/10 bg-white/5 px-4 py-4 shadow-silk backdrop-blur-xl"
@@ -164,18 +191,36 @@ export default function Home() {
                 <option value={40}>40px</option>
               </select>
             </motion.div>
+
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              className="bento-tile rounded-2xl border border-white/10 bg-white/5 px-4 py-4 shadow-silk backdrop-blur-xl sm:col-span-2"
+            >
+              <label htmlFor="theme-select" className="text-xs uppercase tracking-[0.14em] text-emerald-100/80 mb-2 flex items-center gap-2">
+                <Palette className="w-4 h-4" /> Card theme
+              </label>
+              <select
+                id="theme-select"
+                value={selectedTheme}
+                onChange={(e) => setSelectedTheme(e.target.value)}
+                className="w-full rounded-xl bg-gradient-to-r from-slate-900/70 to-slate-800/70 border border-white/10 px-3 py-2.5 text-white focus:ring-2 focus:ring-emerald-300/60 focus:outline-none shadow-inner shadow-black/30"
+              >
+                {themeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </motion.div>
           </div>
 
-          {/* Editor container — glassmorphism */}
           <motion.div
             key={popKey}
             initial={{ scale: 1 }}
             animate={{ scale: 1 }}
             className="relative mt-5 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-950/70 via-slate-900/60 to-slate-950/70 shadow-silk backdrop-blur-xl glass-surface"
           >
-            <div className="absolute right-4 top-3 text-[10px] tracking-[0.2em] text-emerald-100/60 uppercase">
-              Canvas
-            </div>
+            <div className="absolute right-4 top-3 text-[10px] tracking-[0.2em] text-emerald-100/60 uppercase">Canvas</div>
             <label htmlFor="code-input" className="sr-only">Paste Your Code</label>
             <div className="px-4 pt-4 pb-2 flex items-center gap-2 text-sm text-emerald-100/80 uppercase tracking-[0.18em]">
               <Zap className="w-4 h-4" /> Paste Your Code
@@ -190,18 +235,31 @@ export default function Home() {
             />
           </motion.div>
 
-          {/* Export button with success state animation */}
           <div className="mt-6 space-y-2">
+            <motion.button
+              onClick={handleGenerateCard}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-300 via-emerald-300 to-lime-300 px-5 py-3.5 font-semibold text-slate-950 shadow-lg shadow-cyan-400/20 transition-transform"
+            >
+              <div className="absolute inset-0 bg-white/30 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+              <div className="relative flex items-center justify-center gap-2 text-lg">
+                <Zap className="w-5 h-5" />
+                Generate Card
+              </div>
+            </motion.button>
+
             <motion.button
               onClick={handleExport}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
-              className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-fuchsia-400 px-5 py-3.5 font-semibold text-slate-950 shadow-lg shadow-emerald-400/25 transition-transform"
+              disabled={!generatedCard}
+              className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-fuchsia-400 px-5 py-3.5 font-semibold text-slate-950 shadow-lg shadow-emerald-400/25 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="absolute inset-0 bg-white/30 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               <div className="relative flex items-center justify-center gap-2 text-lg">
                 <Download className="w-5 h-5" />
-                Export 4× Image
+                Export 4x Image
               </div>
             </motion.button>
 
@@ -215,14 +273,13 @@ export default function Home() {
                   className="flex items-center justify-center text-emerald-200 text-sm"
                 >
                   <CheckCircle className="w-4 h-4 mr-2 text-emerald-300 animate-success-pop" />
-                  Saved — card ready to share.
+                  Saved - card ready to share.
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </motion.section>
 
-        {/* Right — Live Preview (card pops when code changes) */}
         <motion.section
           key={`preview-${popKey}`}
           initial={{ opacity: 0, scale: 0.96 }}
@@ -231,20 +288,28 @@ export default function Home() {
           className="relative rounded-3xl border border-white/10 glass-surface silk-outline shadow-silk p-4 sm:p-6"
         >
           <div className="pointer-events-none absolute -top-6 right-6 h-28 w-28 rounded-full bg-cyan-300/30 blur-2xl animate-[pulse_8s_ease-in-out_infinite]" />
-          <CodeCard
-            cardRef={cardRef}
-            code={code}
-            language={language}
-            theme="dracula"
-            onLineClick={handleLineClick}
-            highlightedLines={highlightedLines}
-            padding={cardPadding}
-          />
+          {generatedCard ? (
+            <CodeCard
+              cardRef={cardRef}
+              code={generatedCard.code}
+              language={generatedCard.language}
+              theme={generatedCard.theme}
+              onLineClick={handleLineClick}
+              highlightedLines={generatedCard.highlightedLines}
+              padding={generatedCard.padding}
+            />
+          ) : (
+            <div className="min-h-[320px] rounded-2xl border border-dashed border-white/20 bg-slate-950/40 flex items-center justify-center text-center px-6">
+              <p className="text-sm sm:text-base text-white/70">
+                Card result appears here after you press <span className="font-semibold text-white">Generate Card</span>.
+              </p>
+            </div>
+          )}
         </motion.section>
       </div>
 
       <footer className="text-center mt-12 text-gray-400 text-sm space-y-1">
-        <p>SnapCode — Next.js 15, Shiki (Dracula), Framer Motion. Vercel-ready.</p>
+        <p>SnapCode - Next.js 15, Shiki, Framer Motion. Vercel-ready.</p>
       </footer>
     </main>
   );
