@@ -31,16 +31,16 @@ const placeholderCode = `function greetings(name) {
 }`;
 
 const themeOptions = [
-  { value: "dracula", label: "Dracula" },
-  { value: "github-dark", label: "GitHub Dark" },
-  { value: "nord", label: "Nord" },
-  { value: "one-dark-pro", label: "One Dark Pro" },
+  { value: "aurora", label: "Aurora" },
+  { value: "sunset", label: "Sunset" },
+  { value: "ocean", label: "Ocean" },
+  { value: "graphite", label: "Graphite" },
 ];
 
 type GeneratedCard = {
   code: string;
   language: string;
-  theme: string;
+  cardTheme: string;
   padding: number;
   highlightedLines: Set<number>;
 };
@@ -56,7 +56,7 @@ export default function Home() {
   const [code, setCode] = useState<string>(placeholderCode);
   const [language, setLanguage] = useState<string>("javascript");
   const [highlightedLines, setHighlightedLines] = useState<Set<number>>(() => new Set([3]));
-  const [selectedTheme, setSelectedTheme] = useState<string>("dracula");
+  const [selectedTheme, setSelectedTheme] = useState<string>("aurora");
   const [generatedCard, setGeneratedCard] = useState<GeneratedCard | null>(null);
   const [exportSuccess, setExportSuccess] = useState<boolean>(false);
   const [cardPadding, setCardPadding] = useState<number>(24);
@@ -83,7 +83,7 @@ export default function Home() {
     setGeneratedCard({
       code,
       language,
-      theme: selectedTheme,
+      cardTheme: selectedTheme,
       padding: cardPadding,
       highlightedLines: new Set(highlightedLines),
     });
@@ -133,7 +133,7 @@ export default function Home() {
         className="text-center mb-10 space-y-3"
       >
         <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs font-medium text-emerald-200/90 backdrop-blur-md shadow-md shadow-emerald-400/15">
-          High-res code cards � Theme selector � 4x export
+          High-res code cards - Main theme selector - 4x export
         </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-100 to-cyan-200 drop-shadow-[0_10px_50px_rgba(0,0,0,0.35)]">
           SnapCode <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-300 via-amber-200 to-cyan-200">2026</span>
@@ -197,7 +197,7 @@ export default function Home() {
               className="bento-tile rounded-2xl border border-white/10 bg-white/5 px-4 py-4 shadow-silk backdrop-blur-xl sm:col-span-2"
             >
               <label htmlFor="theme-select" className="text-xs uppercase tracking-[0.14em] text-emerald-100/80 mb-2 flex items-center gap-2">
-                <Palette className="w-4 h-4" /> Card theme
+                <Palette className="w-4 h-4" /> Main theme
               </label>
               <select
                 id="theme-select"
@@ -293,7 +293,8 @@ export default function Home() {
               cardRef={cardRef}
               code={generatedCard.code}
               language={generatedCard.language}
-              theme={generatedCard.theme}
+              theme="dracula"
+              cardTheme={generatedCard.cardTheme}
               onLineClick={handleLineClick}
               highlightedLines={generatedCard.highlightedLines}
               padding={generatedCard.padding}
