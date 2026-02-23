@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { getHighlighter, type Highlighter } from "shiki";
+// Use the browser-friendly bundle so no Node fs/path are pulled into the client build.
+import { getHighlighter, type Highlighter } from "shiki/bundle/web";
+// Provide Oniguruma WASM as a URL that the browser can fetch.
+import onigWasm from "shiki/onig.wasm?url";
 
 const SHIKI_THEME = "dracula" as const;
 const LANGUAGES = [
@@ -52,7 +55,7 @@ export interface UseProcessorResult {
 
 /**
  * Hook that handles Shiki syntax highlighting with Dracula theme.
- * Returns highlighted HTML and readiness state for the code card.
+ * Uses the web bundle + explicit WASM loader to stay client-bundle safe.
  */
 export function useProcessor(
   code: string,
@@ -68,6 +71,10 @@ export function useProcessor(
     getHighlighter({
       themes: [theme],
       langs: [...LANGUAGES],
+      loadWasm: async () => {
+        const res = await fetch(onigWasm);
+        return res.arrayBuffer();
+      },
     })
       .then((h) => {
         if (!cancelled) setHighlighter(h);
